@@ -64,7 +64,6 @@ class Pawn(Figure):
         super().__init__(check_index, "pawn.png", colour, "Pawn", chessboard)
         self.__firstMove = True
 
-    @possible_move_decorator
     def check_for_all_possible_moves(self):
         indexes_of_possible_moves = []
         if self.colour == "black":
@@ -82,7 +81,30 @@ class Pawn(Figure):
             indexes_of_possible_moves.append(possible_move)
             indexes_of_possible_moves.append(self.current_check_index)
 
-        return indexes_of_possible_moves
+        new_indexes_of_possible_moves = indexes_of_possible_moves
+        for index in indexes_of_possible_moves:
+            if self.chessboard.get_check(index).hasFigure:
+                new_indexes_of_possible_moves.remove(index)
+
+        eat_moves = [self.current_check_index + 7, self.current_check_index - 7,
+                     self.current_check_index + 9, self.current_check_index - 9]
+
+        correct_eat_moves = []
+
+        for move_index in range(0, len(eat_moves)):
+            if side_of_moving_coef == -1 and eat_moves[move_index] < self.current_check_index \
+                    and self.chessboard.get_check(eat_moves[move_index]).hasFigure:
+                correct_eat_moves.append(eat_moves[move_index])
+            if side_of_moving_coef == 1 and eat_moves[move_index] > self.current_check_index\
+                    and self.chessboard.get_check(eat_moves[move_index]).hasFigure:
+                correct_eat_moves.append(eat_moves[move_index])
+
+        new_indexes_of_possible_moves.append(self.current_check_index)
+        new_indexes_of_possible_moves += correct_eat_moves
+
+        return new_indexes_of_possible_moves
+
+
 
     @motion_decorator
     def move_to(self, next_check_index):
@@ -184,4 +206,5 @@ class Horse(Figure):
             elif 0 <= index < 64 and self.chessboard.get_check(index).figure.colour == killable_colour:
                 new_indexes_of_possible_moves.append(index)
 
+        new_indexes_of_possible_moves.append(self.current_check_index)
         return new_indexes_of_possible_moves
