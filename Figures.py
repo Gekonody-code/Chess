@@ -144,3 +144,7 @@ class Figure(ABC, pygame.sprite.Sprite):
     def __ne__(self, other):
         """Переопределение базового оператора неравенства"""
         return self.__name != other.name and self.__colour != other.colour
+
+    def __del__(self):
+        print('Inside destructor')
+        print('Object destroyed')
