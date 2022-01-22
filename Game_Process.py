@@ -233,22 +233,13 @@ async def start_Game():
         if keys[pygame.K_RETURN]:
             running = win(which_turn, delta_time_s)
 
-        # draw_figures_from_list(rooks)
-        # draw_figures_from_list(bishops)
-        # draw_figures_from_list(queens)
-        # draw_figures_from_list(pawns)
-        # draw_figures_from_list(horses)
+        draw_figures_from_list(rooks)
+        draw_figures_from_list(bishops)
+        draw_figures_from_list(queens)
+        draw_figures_from_list(pawns)
+        draw_figures_from_list(horses)
 
-        killed_figures = []
-        for index in range(0, len(figures)):
-            if not figures[index].isAlive:
-                figures[index] = None
-                killed_figures.append(index)
-
-        for killed_figure in killed_figures:
-            figures.pop(killed_figure)
-
-        draw_figures_from_list(figures)
+        # draw_figures_from_list(figures)
 
         # После отрисовки всего, переворачиваем экран
         pygame.display.update()
