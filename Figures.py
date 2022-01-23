@@ -51,6 +51,7 @@ class Figure(ABC, pygame.sprite.Sprite):
     def die(self):
         """Убивает фигуру"""
         self.isAlive = False
+        self.chessboard.get_check(self.current_check_index).hasFigure= None
 
     @motion_decorator
     def move_to(self, next_check_index):
@@ -69,11 +70,9 @@ class Figure(ABC, pygame.sprite.Sprite):
 
                 self.current_check_index = next_check_index
             else:
-
                 self.last_move = "{0} {1} was moved from {2} check to {3}"\
                     .format(self.colour, self.name,
                             self.current_check_index, next_check_index)
-
                 self.current_check_index = next_check_index
 
     @abstractmethod
@@ -144,3 +143,5 @@ class Figure(ABC, pygame.sprite.Sprite):
     def __ne__(self, other):
         """Переопределение базового оператора неравенства"""
         return self.__name != other.name and self.__colour != other.colour
+
+

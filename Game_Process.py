@@ -116,6 +116,8 @@ async def start_Game():
     pawns = pawns_thread.join()
     horses = horses_thread.join()
 
+    figures = []
+    figures += rooks + bishops + queens + pawns + horses
     # rooks = init_rooks(chessboard)
     # bishops = init_bishops(chessboard)
     # queens = init_queens(chessboard)
@@ -136,6 +138,7 @@ async def start_Game():
 
     running = True
     start_time = pygame.time.get_ticks()
+    previous_figure = chessboard.get_check(0).figure
 
     while running:
 
@@ -194,11 +197,17 @@ async def start_Game():
                             log_task = asyncio.create_task(log_history_of_game(current_figure.last_move))
                             await log_task
 
+                            print(previous_figure)
+                            if previous_figure.name == "Pawn" and previous_figure.justDidFirstMove:
+                                previous_figure.justDidFirstMove = False
+
+                            previous_figure = current_figure
                             # После совершения хода, меняем, чей ход сейчас
                             if which_turn == "white":
                                 which_turn = "black"
                             else:
                                 which_turn = "white"
+
 
 
                     except FigureException as pawnTrigger:
@@ -229,6 +238,9 @@ async def start_Game():
         draw_figures_from_list(queens)
         draw_figures_from_list(pawns)
         draw_figures_from_list(horses)
+
+        # draw_figures_from_list(figures)
+
         # После отрисовки всего, переворачиваем экран
         pygame.display.update()
 
@@ -244,22 +256,6 @@ async def log_history_of_game(info_about_move):
         else:
             with open("history_of_the_game.txt", "x") as f:  # создаем файл на запись, если его не существует
                 f.write(info_about_move + "\n")
-
-async def hurry_the_player(delay):
-    print("Начал ждать")
-    await asyncio.sleep(delay)
-    print("Уже {0} сек думаешь. Давай быстрее ходи!!!".format(delay))
-
-# def async_call_later(seconds, callback):
-#     async def schedule():
-#         await asyncio.sleep(seconds)
-#         print("AAAAAAAAaa")
-#         if asyncio.iscoroutinefunction(callback):
-#             await callback()
-#         else:
-#             callback()
-#
-#     asyncio.ensure_future(schedule())
 
 async def main():
     """Создание таска игры"""
