@@ -84,6 +84,12 @@ async def start_Game():
         horses.append(Horse(62, "white", chessboard))
         return horses
 
+    def init_kings(chessboard):
+        kings = []
+        kings.append(King(4, "black", chessboard))
+        kings.append(King(60, "white", chessboard))
+        return kings
+
     def draw_figures_from_list(figures):
         """Отрисовывает фигуры из листа"""
         for figure in figures:
@@ -104,20 +110,23 @@ async def start_Game():
     queens_thread = FiguresInitThread(target=init_queens, args=(chessboard,), name="queens")
     pawns_thread = FiguresInitThread(target=init_pawns, args=(chessboard,), name="pawns")
     horses_thread = FiguresInitThread(target=init_horses, args=(chessboard,), name="horses")
+    kings_thread = FiguresInitThread(target=init_kings, args=(chessboard,), name="kings")
     rooks_thread.start()
     bishops_thread.start()
     queens_thread.start()
     pawns_thread.start()
     horses_thread.start()
+    kings_thread.start()
 
     rooks = rooks_thread.join()
     bishops = bishops_thread.join()
     queens = queens_thread.join()
     pawns = pawns_thread.join()
     horses = horses_thread.join()
+    kings = kings_thread.join()
 
-    figures = []
-    figures += rooks + bishops + queens + pawns + horses
+    # figures = []
+    # # figures += rooks + bishops + queens + pawns + horses + kings
     # rooks = init_rooks(chessboard)
     # bishops = init_bishops(chessboard)
     # queens = init_queens(chessboard)
@@ -238,7 +247,7 @@ async def start_Game():
         draw_figures_from_list(queens)
         draw_figures_from_list(pawns)
         draw_figures_from_list(horses)
-
+        draw_figures_from_list(kings)
         # draw_figures_from_list(figures)
 
         # После отрисовки всего, переворачиваем экран

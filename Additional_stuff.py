@@ -91,22 +91,16 @@ def possible_move_decorator(func):
 
                 for i in range(3):
                     if deleted_index // 8 != 7:
-                        # print("pervoe uslovie", deleted_index + 7 + i)
                         if (deleted_index + 7 + i) // 8 == deleted_index // 8 + 1:
                             neighbours_of_deleted_indexes.append(deleted_index + 7 + i)
                     if deleted_index // 8 != 0:
                         if (deleted_index - 7 - i) // 8 == deleted_index // 8 - 1:
-                            # print("2 uslovie", deleted_index - 7 - i)
                             neighbours_of_deleted_indexes.append(deleted_index - 7 - i)
                 if deleted_index % 8 != 0:
-                    # print("3 uslovie", deleted_index - 1)
                     neighbours_of_deleted_indexes.append(deleted_index - 1)
                 if deleted_index % 8 != 7:
-                    # print("4 uslovie", deleted_index + 1)
                     neighbours_of_deleted_indexes.append(deleted_index + 1)
 
-                # print(deleted_index)
-                # print(neighbours_of_deleted_indexes)
                 # Если в соседях удаленной клетки, есть возможная клетка, то удаленная клетка добавляется в список восстановленных ходов
                 # Таким образом мы восстанавливаем только те клетки с фигурами, которые будут первыми на пути выбранной фигуры
                 for index in neighbours_of_deleted_indexes:

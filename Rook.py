@@ -257,24 +257,3 @@ class Horse(Figure):
         new_indexes_of_possible_moves.append(self.current_check_index)
         return new_indexes_of_possible_moves
 
-class King(Figure):
-    def __init__(self, check_index, colour, chessboard):
-        super().__init__(check_index, "king.png", colour, "King", chessboard)
-
-    @possible_move_decorator
-    def check_for_all_possible_moves(self):
-        indexes_of_possible_moves = []
-        for i in range(3):
-            if self.current_check_index // 8 != 7:
-                if (self.current_check_index + 7 + i) // 8 == self.current_check_index // 8 + 1:
-                    indexes_of_possible_moves.append(self.current_check_index + 7 + i)
-            if self.current_check_index // 8 != 0:
-                if (self.current_check_index - 7 - i) // 8 == self.current_check_index // 8 - 1:
-                    indexes_of_possible_moves.append(self.current_check_index - 7 - i)
-        if self.current_check_index % 8 != 0:
-            indexes_of_possible_moves.append(self.current_check_index - 1)
-        if self.current_check_index % 8 != 7:
-            indexes_of_possible_moves.append(self.current_check_index + 1)
-
-        indexes_of_possible_moves.append(self.current_check_index)
-        return indexes_of_possible_moves
