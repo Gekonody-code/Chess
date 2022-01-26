@@ -30,10 +30,9 @@ def possible_move_decorator(func):
             if (8 > self.current_check_index - deleted_index > -8) \
                     and (self.current_check_index // 8 == deleted_index // 8):
                 row = self.current_check_index // 8
-                while deleted_index // 8 == row and deleted_index > 0:
+                while deleted_index // 8 == row and deleted_index >= 0:
                     if self.current_check_index > deleted_index:
                         if deleted_index in new_indexes_of_possible_moves:
-                            # print("УДАЛЯЮ: ", deleted_index)
                             new_indexes_of_possible_moves.remove(deleted_index)
                         deleted_index -= 1
                     else:

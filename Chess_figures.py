@@ -7,6 +7,8 @@ class Rook(Figure):
     """Фигура Ладья"""
 
     def __init__(self, check_index, colour, chessboard):
+        self.__firstMove = True
+        self.__kingCommandToCastle = False
         super().__init__(check_index, "rook.png", colour, "Rook", chessboard)
 
     @possible_move_decorator
@@ -17,7 +19,42 @@ class Rook(Figure):
             if ((check_index - self.current_check_index) % 8 == 0 or
                     (check_index // 8 == self.current_check_index // 8)):
                 indexes_of_possible_moves.append(check_index)
+
+        # if self.name == "Rook" and self.kingCommandToCastle and self.firstMove:
+        #     if self.current_check_index % 8 == 0:
+        #         indexes_of_possible_moves.append(self.current_check_index + 3)
+        #     if self.current_check_index % 8 == 7:
+        #         indexes_of_possible_moves.append(self.current_check_index - 2)
+        #     self.kingCommandToCastle = False
         return indexes_of_possible_moves
+    
+    def move_to(self, next_check_index):
+        if self.name == "Rook" and self.kingCommandToCastle:
+            self.write_down_move_and_die(next_check_index)
+            self.current_check_index = next_check_index
+            print(self.current_check_index)
+        else: 
+            super(Rook, self).move_to(next_check_index)
+        self.firstMove = False
+    @property
+    def firstMove(self):
+        """Имеет фигуру или нет"""
+        return self.__firstMove
+
+    @firstMove.setter
+    def firstMove(self, firstMove):
+        """Сеттер hasFigure"""
+        self.__firstMove = firstMove
+
+    @property
+    def kingCommandToCastle(self):
+        return self.__kingCommandToCastle
+
+    @kingCommandToCastle.setter
+    def kingCommandToCastle(self, kingCommandToCastle):
+        """Сеттер kingCommandToCastle"""
+        self.__kingCommandToCastle = kingCommandToCastle
+
 
 
 class Bishop(Figure):
@@ -66,14 +103,17 @@ class Pawn(Figure):
         self.__justDidFirstMove = False
 
     def check_for_all_possible_moves(self):
+        enemy_colour = None
         indexes_of_possible_moves = []
         if self.colour == "black":
             side_of_moving_coef = 1
+            enemy_colour = "white"
         else:
             side_of_moving_coef = -1
+            enemy_colour = "black"
 
         possible_move = self.current_check_index + 8 * side_of_moving_coef
-        if self.firstMove:
+        if self.firstMove and not self.chessboard.get_check(possible_move).hasFigure:
             indexes_of_possible_moves.append(possible_move)
             indexes_of_possible_moves.append(possible_move + 8 * side_of_moving_coef)
             indexes_of_possible_moves.append(self.current_check_index)
@@ -111,7 +151,7 @@ class Pawn(Figure):
             left_figure = self.chessboard.get_check(self.current_check_index - 1).figure
 
         if right_figure is not None:
-            if right_figure.name == "Pawn" :
+            if right_figure.name == "Pawn":
                 if right_figure.justDidFirstMove:
                     if side_of_moving_coef == 1:
                         correct_eat_moves.append(self.current_check_index + 9)
@@ -129,54 +169,42 @@ class Pawn(Figure):
         new_indexes_of_possible_moves.append(self.current_check_index)
         new_indexes_of_possible_moves += correct_eat_moves
 
+        remove_allies_indexes_list = []
+        for index in new_indexes_of_possible_moves:
+            if (self.chessboard.get_check(index).hasFigure
+                and self.chessboard.get_check(index).figure.colour == enemy_colour) \
+                    or not self.chessboard.get_check(index).hasFigure:
+                remove_allies_indexes_list.append(index)
+
+        new_indexes_of_possible_moves = remove_allies_indexes_list
+        new_indexes_of_possible_moves.append(self.current_check_index)
         return new_indexes_of_possible_moves
-
-
 
     @motion_decorator
     def move_to(self, next_check_index):
         """Перемещает фигуру"""
-        if next_check_index in self.check_for_all_possible_moves() and self.current_check_index != next_check_index:
 
-            if self.chessboard.get_check(next_check_index).hasFigure:
-                self.chessboard.get_check(next_check_index).figure.die()
+        super(Pawn, self).move_to(next_check_index)
+        if self.colour == "white" and self.current_check_index // 8 == 0:
+            raise FigureException("white")
+        elif self.colour == "black" and self.current_check_index // 8 == 7:
+            raise FigureException("black")
 
-                self.last_move = "{0} {1} has eaten {2} {3}" \
-                                 " and was moved from {4} check to {5}" \
-                    .format(self.colour, self.name,
-                            self.chessboard.get_check(next_check_index).figure.colour,
-                            self.chessboard.get_check(next_check_index).figure.name,
-                            self.current_check_index, next_check_index)
+        if self.firstMove:
+            self.__justDidFirstMove = True
+            self.firstMove = False
 
-                self.current_check_index = next_check_index
-            else:
+        if (self.colour == "white"
+                and self.chessboard.get_check(next_check_index + 8).hasFigure
+                and self.chessboard.get_check(next_check_index + 8).figure.name == "Pawn"
+                and self.chessboard.get_check(next_check_index + 8).figure.justDidFirstMove):
+            self.chessboard.get_check(next_check_index + 8).figure.die()
 
-                self.last_move = "{0} {1} was moved from {2} check to {3}" \
-                    .format(self.colour, self.name,
-                            self.current_check_index, next_check_index)
-
-                self.current_check_index = next_check_index
-
-            if self.colour == "white" and self.current_check_index // 8 == 0:
-                raise FigureException("white")
-            elif self.colour == "black" and self.current_check_index // 8 == 7:
-                raise FigureException("black")
-
-            if self.firstMove:
-                self.__justDidFirstMove = True
-                self.firstMove = False
-
-            if (self.colour == "white"
-                    and self.chessboard.get_check(next_check_index + 8 ).hasFigure
-                    and self.chessboard.get_check(next_check_index + 8 ).figure.name == "Pawn"
-                    and self.chessboard.get_check(next_check_index + 8 ).figure.justDidFirstMove):
-                self.chessboard.get_check(next_check_index + 8).figure.die()
-
-            elif (self.colour == "black"
-                    and self.chessboard.get_check(next_check_index - 8).hasFigure
-                    and self.chessboard.get_check(next_check_index - 8).figure.name == "Pawn"
-                    and self.chessboard.get_check(next_check_index - 8).figure.justDidFirstMove):
-                self.chessboard.get_check(next_check_index - 8).figure.die()
+        elif (self.colour == "black"
+              and self.chessboard.get_check(next_check_index - 8).hasFigure
+              and self.chessboard.get_check(next_check_index - 8).figure.name == "Pawn"
+              and self.chessboard.get_check(next_check_index - 8).figure.justDidFirstMove):
+            self.chessboard.get_check(next_check_index - 8).figure.die()
 
     def turn_into_queen(self):
         if self.colour == "white" and self.current_check_index // 8 == 0:
@@ -207,6 +235,7 @@ class Pawn(Figure):
     def justDidFirstMove(self, firstMove):
         """Сеттер hasFigure"""
         self.__justDidFirstMove = firstMove
+
 
 class Horse(Figure):
     def __init__(self, check_index, colour, chessboard):
@@ -257,8 +286,10 @@ class Horse(Figure):
         new_indexes_of_possible_moves.append(self.current_check_index)
         return new_indexes_of_possible_moves
 
+
 class King(Figure):
     def __init__(self, check_index, colour, chessboard):
+        self.firstMove = True
         super().__init__(check_index, "king.png", colour, "King", chessboard)
 
     @possible_move_decorator
@@ -277,4 +308,64 @@ class King(Figure):
             indexes_of_possible_moves.append(self.current_check_index + 1)
 
         indexes_of_possible_moves.append(self.current_check_index)
+
+        if self.firstMove:
+            indexes_for_castling = self.castling()
+            indexes_of_possible_moves += indexes_for_castling
+
         return indexes_of_possible_moves
+
+    def move_to(self, next_check_index):
+        castling_signal = next_check_index in self.castling()
+        previous_check_index = self.current_check_index
+        super(King, self).move_to(next_check_index)
+
+        if castling_signal:
+
+            if next_check_index < previous_check_index:
+                self.chessboard.get_check(next_check_index - 2).figure.kingCommandToCastle = True
+                self.chessboard.get_check(next_check_index - 2).figure.move_to(next_check_index + 1)
+            else:
+                print("YA2")
+                self.chessboard.get_check(next_check_index + 1).figure.kingCommandToCastle = True
+                print(self.chessboard.get_check(next_check_index + 1).figure)
+                self.chessboard.get_check(next_check_index + 1).figure.move_to(next_check_index - 1)
+
+        if self.firstMove:
+            self.firstMove = False
+
+    def castling(self):
+        rooks_indexes = [0, 7, 56, 63]
+        rooks_for_castling = []
+        for rooks_index in rooks_indexes:
+            if self.chessboard.get_check(rooks_index).hasFigure and \
+                    self.chessboard.get_check(rooks_index).figure.name == "Rook" and \
+                    self.chessboard.get_check(rooks_index).figure.firstMove:
+
+                if self.colour == "white" and rooks_index > 7:
+
+                    if 61 in self.chessboard.get_check(rooks_index).figure.check_for_all_possible_moves() or \
+                            59 in self.chessboard.get_check(rooks_index).figure.check_for_all_possible_moves():
+                        rooks_for_castling.append(rooks_index)
+                else:
+                    if 3 in self.chessboard.get_check(rooks_index).figure.check_for_all_possible_moves() or \
+                            5 in self.chessboard.get_check(rooks_index).figure.check_for_all_possible_moves():
+                        rooks_for_castling.append(rooks_index)
+
+        for i in range(len(rooks_for_castling)):
+            if rooks_for_castling[i] < self.current_check_index:
+                rooks_for_castling[i] += 2
+            else:
+                rooks_for_castling[i] -= 1
+
+        return rooks_for_castling
+
+        @property
+        def firstMove(self):
+            """Имеет фигуру или нет"""
+            return self.__firstMove
+
+        @firstMove.setter
+        def firstMove(self, firstMove):
+            """Сеттер hasFigure"""
+            self.__firstMove = firstMove

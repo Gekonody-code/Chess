@@ -182,7 +182,7 @@ async def start_Game():
                 # Находим ячейку по координатам, проверяем, если там есть фигура
                 # Если есть подсвечиваем все возможные ходы
                 selected_check = chessboard.find_check_by_coordinates(x, y)
-                if selected_check.hasFigure and selected_check.figure.colour == which_turn:
+                if selected_check.hasFigure: #and selected_check.figure.colour == which_turn:
                     possible_moves = selected_check.figure.check_for_all_possible_moves()
                     for index in possible_moves:
                         # Словарь нужен, чтобы вернуть цвета к исходным
@@ -192,7 +192,7 @@ async def start_Game():
             if event.type == pygame.MOUSEBUTTONUP:
                 # Если кнопку мыши отпустили
                 # Проверка на то что в выбранной клетке есть фигура и она соответствует цвету который сейчас ходит
-                if selected_check.hasFigure and selected_check.figure.colour == which_turn:
+                if selected_check.hasFigure: #and selected_check.figure.colour == which_turn:
                     (x, y) = pygame.mouse.get_pos()
                     new_check_index = chessboard.get_check_index_with_coordinates(x, y)
                     # Получили индекс клетки где мышку отпустили
@@ -206,7 +206,6 @@ async def start_Game():
                             log_task = asyncio.create_task(log_history_of_game(current_figure.last_move))
                             await log_task
 
-                            print(previous_figure)
                             if previous_figure.name == "Pawn" and previous_figure.justDidFirstMove:
                                 previous_figure.justDidFirstMove = False
 

@@ -58,22 +58,25 @@ class Figure(ABC, pygame.sprite.Sprite):
         """Перемещает фигуру"""
         # Проверяет можно ли походить в выбранную клетку и что выбранная клетка не совпадает с текущей
         if next_check_index in self.check_for_all_possible_moves() and self.__current_check_index != next_check_index:
-
+            self.write_down_move_and_die(next_check_index)
             if self.chessboard.get_check(next_check_index).hasFigure:
                 self.chessboard.get_check(next_check_index).figure.die()
+            self.current_check_index = next_check_index
 
-                self.last_move = "{0} {1} has eaten {2} {3}" \
-                                 " and was moved from {4} check to {5}"\
-                    .format(self.colour, self.name,
-                            self.chessboard.get_check(next_check_index).figure.colour, self.chessboard.get_check(next_check_index).figure.name,
-                            self.current_check_index, next_check_index)
 
-                self.current_check_index = next_check_index
-            else:
-                self.last_move = "{0} {1} was moved from {2} check to {3}"\
-                    .format(self.colour, self.name,
-                            self.current_check_index, next_check_index)
-                self.current_check_index = next_check_index
+    def write_down_move_and_die(self, next_check_index):
+        if self.chessboard.get_check(next_check_index).hasFigure:
+            self.last_move = "{0} {1} has eaten {2} {3}" \
+                             " and was moved from {4} check to {5}" \
+                .format(self.colour, self.name,
+                        self.chessboard.get_check(next_check_index).figure.colour,
+                        self.chessboard.get_check(next_check_index).figure.name,
+                        self.current_check_index, next_check_index)
+
+        else:
+            self.last_move = "{0} {1} was moved from {2} check to {3}" \
+                .format(self.colour, self.name,
+                        self.current_check_index, next_check_index)
 
     @abstractmethod
     def check_for_all_possible_moves(self):
