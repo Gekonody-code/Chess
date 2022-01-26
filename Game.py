@@ -1,17 +1,17 @@
 import datetime
-import threading
 import pygame
 import os
 import os.path
-import random
-from Additional_stuff import *
-from Chess_board import Chessboard
-from Chess_figures import *
-import asyncio
+from Figures.Bishop import Bishop
+from Figures.Horse import Horse
+from Figures.King import King
+from Figures.Pawn import Pawn
+from Figures.Queen import Queen
+from Figures.Rook import Rook
 from GUI_tkinter import *
 from Sqlite_db_chess import save_game_in_db
-
-selected = None
+from Additional_stuff import *
+from Game_process import GameProcess
 
 #Определяет чей ход
 which_turn = 'white'
@@ -111,6 +111,7 @@ async def start_Game():
     pawns_thread = FiguresInitThread(target=init_pawns, args=(chessboard,), name="pawns")
     horses_thread = FiguresInitThread(target=init_horses, args=(chessboard,), name="horses")
     kings_thread = FiguresInitThread(target=init_kings, args=(chessboard,), name="kings")
+
     rooks_thread.start()
     bishops_thread.start()
     queens_thread.start()
@@ -125,8 +126,8 @@ async def start_Game():
     horses = horses_thread.join()
     kings = kings_thread.join()
 
-    # figures = []
-    # # figures += rooks + bishops + queens + pawns + horses + kings
+    figures = []
+    figures += rooks + bishops + queens + pawns + horses + kings
     # rooks = init_rooks(chessboard)
     # bishops = init_bishops(chessboard)
     # queens = init_queens(chessboard)
@@ -145,11 +146,11 @@ async def start_Game():
     # hurry_task
 
 
-    running = True
     start_time = pygame.time.get_ticks()
     previous_figure = chessboard.get_check(0).figure
 
-    while running:
+    game_process = GameProcess(which_turn, figures, start_time)
+    while game_process.running:
 
         # Держим цикл на правильной скорости
         clock.tick(FPS)
@@ -168,12 +169,11 @@ async def start_Game():
         for event in pygame.event.get():
             # check for closing window
             if event.type == pygame.QUIT:
-                running = False
+                game_process.running = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 # Если нажали на кнопку мыши
                 pos = pygame.mouse.get_pos()  # Координаты курсора в кортеже x,y
-                start_check_color = None
                 index_colors_dict = {}
 
                 x = pos[0]
@@ -182,7 +182,7 @@ async def start_Game():
                 # Находим ячейку по координатам, проверяем, если там есть фигура
                 # Если есть подсвечиваем все возможные ходы
                 selected_check = chessboard.find_check_by_coordinates(x, y)
-                if selected_check.hasFigure: #and selected_check.figure.colour == which_turn:
+                if selected_check.hasFigure and selected_check.figure.colour == game_process.which_turn:
                     possible_moves = selected_check.figure.check_for_all_possible_moves()
                     for index in possible_moves:
                         # Словарь нужен, чтобы вернуть цвета к исходным
@@ -192,7 +192,7 @@ async def start_Game():
             if event.type == pygame.MOUSEBUTTONUP:
                 # Если кнопку мыши отпустили
                 # Проверка на то что в выбранной клетке есть фигура и она соответствует цвету который сейчас ходит
-                if selected_check.hasFigure: #and selected_check.figure.colour == which_turn:
+                if selected_check.hasFigure and selected_check.figure.colour == game_process.which_turn:
                     (x, y) = pygame.mouse.get_pos()
                     new_check_index = chessboard.get_check_index_with_coordinates(x, y)
                     # Получили индекс клетки где мышку отпустили
@@ -209,6 +209,7 @@ async def start_Game():
                             if previous_figure.name == "Pawn" and previous_figure.justDidFirstMove:
                                 previous_figure.justDidFirstMove = False
 
+                            game_process.turn()
                             previous_figure = current_figure
                             # После совершения хода, меняем, чей ход сейчас
                             if which_turn == "white":
@@ -227,11 +228,7 @@ async def start_Game():
                         new_queen = Queen(current_figure.current_check_index, pawnTrigger.message,
                                           current_figure.chessboard)
                         queens.append(new_queen)
-
-                        if which_turn == "white":
-                            which_turn = "black"
-                        else:
-                            which_turn = "white"
+                        game_process.turn()
 
                     selected_check.cancel_highlight(index_colors_dict, chessboard)
 
@@ -239,7 +236,7 @@ async def start_Game():
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_RETURN]:
-            running = win(which_turn, delta_time_s)
+            game_process.running = game_process.win(which_turn)
 
         draw_figures_from_list(rooks)
         draw_figures_from_list(bishops)
@@ -269,18 +266,6 @@ async def main():
     """Создание таска игры"""
     game_task = asyncio.create_task(start_Game())
     await game_task
-
-
-def win(colour_of_winners, duration_of_the_game):
-
-    game_duration = datetime.timedelta(seconds=duration_of_the_game)
-    break_loop_signal = False
-    print(f"{colour_of_winners} победили за {str(game_duration)}")
-
-    f = open("history_of_the_game.txt", 'r')
-    history_of_game = f.read()
-    save_game_in_db(colour_of_winners, str(game_duration), history_of_game, )
-    return break_loop_signal
 
 
 # Создание GUI меню с помощью библиотеки tkinter

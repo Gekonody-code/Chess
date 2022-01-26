@@ -33,7 +33,7 @@ class Figure(ABC, pygame.sprite.Sprite):
     def set_color(self):
         """Выбирает цвет и указывает директорию с картинкой"""
         self.__figureImg = self.__colour + "_" + self.__figureImg
-        filename = "Assets"
+        filename = "../Chess_project/Assets"
         file_path = os.path.abspath(filename)
         self.__figureImg = file_path + "\\" + self.__figureImg
 
@@ -45,8 +45,8 @@ class Figure(ABC, pygame.sprite.Sprite):
 
         if self.isAlive:
             # print(self.name, self.isAlive)
-            self.pict = pygame.image.load(self.__figureImg)
-            screen.blit(self.pict, (check.checkX, check.checkY))  # Отрисовывает фигуру по указанным координатам
+            pict = pygame.image.load(self.__figureImg)
+            screen.blit(pict, (check.checkX, check.checkY))  # Отрисовывает фигуру по указанным координатам
 
     def die(self):
         """Убивает фигуру"""

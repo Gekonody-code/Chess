@@ -53,8 +53,6 @@ class Chessboard:
 
     def draw_chess_board(self, screen):
         """Отрисовывает клетки на экране"""
-        # if not self.__checks:
-        #     self.init_checks()
         for check in self.__checks:
             check.draw_check(screen)
 
